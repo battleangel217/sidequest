@@ -11,23 +11,59 @@ import { StreakCard } from '@/components/streaks/streak-card';
 import { CommunityCard } from '@/components/community/community-card';
 import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities, mockUsers } from '@/lib/data';
-import { User } from '@/lib/types';
+import { AuthUser, Community, User } from '@/lib/types';
 import { Plus, Users as UsersIcon, CheckCircle2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [communities, setCommunities] = useState<Community[]>([])
+  const [userData, setUserData] = useState<AuthUser | null>(null);
 
   useEffect(() => {
-    initializeStorage();
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/auth');
-      return;
-    }
-    setUser(currentUser);
-    setLoading(false);
+    const fetchCommunities = async () => {
+      initializeStorage();
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        router.push('/auth');
+        return;
+      }
+      
+      setUser(currentUser.data);
+      setUserData(currentUser);
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/communities/', {
+          headers: {
+            "Authorization": `Bearer ${currentUser.access}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Transform API data to match frontend types
+          const mappedCommunities: Community[] = data.map((c: any) => ({
+            ...c,
+            id: String(c.id),
+            isPrivate: c.is_private,
+            inviteCode: 'INVITE', // Placeholder as backend doesn't return this yet
+            createdBy: 'System', // Placeholder
+            memberCount: c.members ? c.members.length : 0,
+            members: c.members ? c.members.map(String) : [],
+            created: c.created_at
+          }));
+          setCommunities(mappedCommunities);
+        }
+      } catch (error) {
+        console.error('Failed to fetch communities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunities();
   }, [router]);
 
   if (loading || !user) {
@@ -38,10 +74,10 @@ export default function DashboardPage() {
         </div>
       </div>
     );
-  }
+  }  
 
-  const userCommunities = Object.values(mockCommunities)
-    .filter((c) => c.members.includes(user.id))
+  const userCommunities = communities
+    .filter((c) => c.members.includes(String(user.id)))
     .slice(0, 3);
 
   return (
@@ -55,16 +91,16 @@ export default function DashboardPage() {
             Welcome back, {user.username.split(' ')[0]}!
           </h1>
           <p className="text-muted-foreground">
-            You're level {user.level} with {user.totalEXP} total EXP
+            You're level {user.level} with {user.exp} total EXP
           </p>
         </div>
 
         {/* Streak Card */}
         <div className="mb-8">
           <StreakCard
-            currentStreak={user.currentStreak}
-            bestStreak={user.bestStreak}
-            lastActivityDate={user.lastActivityDate}
+            currentStreak={user.streak}
+            bestStreak={user.best_streak}
+            lastActivityDate={user.last_activity_data}
           />
         </div>
 
@@ -139,15 +175,15 @@ export default function DashboardPage() {
           </Card>
           <Card className="p-6">
             <p className="text-sm text-muted-foreground mb-2">Total EXP</p>
-            <p className="text-3xl font-bold text-secondary">{user.totalEXP}</p>
+            <p className="text-3xl font-bold text-secondary">{user.exp}</p>
           </Card>
           <Card className="p-6">
             <p className="text-sm text-muted-foreground mb-2">Current Streak</p>
-            <p className="text-3xl font-bold text-accent">{user.currentStreak}</p>
+            <p className="text-3xl font-bold text-accent">{user.streak}</p>
           </Card>
           <Card className="p-6">
             <p className="text-sm text-muted-foreground mb-2">Best Streak</p>
-            <p className="text-3xl font-bold text-primary">{user.bestStreak}</p>
+            <p className="text-3xl font-bold text-primary">{user.best_streak}</p>
           </Card>
         </div>
       </main>
