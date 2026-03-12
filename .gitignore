@@ -1,5 +1,9 @@
 .vscode/
-venv/
-venv
+/venv/
+/venv
 .env
-__pychache__/
+/__pycache__/
+/__pycache__
+/db.sqlite3
+node_modules/
+.next/
