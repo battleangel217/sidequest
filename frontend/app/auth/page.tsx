@@ -8,13 +8,16 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Flame, Eye, EyeOff } from 'lucide-react';
-import { signUp, signIn } from '@/lib/auth';
+import { signUp, signIn, signInWithGoogle } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-import { error } from 'console';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
+
+import { useTheme } from 'next-themes';
 
 export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { theme } = useTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signup');
 
@@ -32,6 +35,38 @@ export default function AuthPage() {
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   const [showSignUpConfirm, setShowSignUpConfirm] = useState(false);
   const [showSignInPassword, setShowSignInPassword] = useState(false);
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    if (!credentialResponse.credential) return;
+    setIsLoading(true);
+    try {
+      await signInWithGoogle(credentialResponse.credential);
+      toast({
+        title: 'Welcome!',
+        description: 'Successfully signed in with Google. Redirecting to dashboard...',
+      });
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Google sign-in failed';
+      toast({
+        title: 'Sign In Failed',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast({
+      title: 'Sign In Failed',
+      description: 'Google authentication was not completed.',
+      variant: 'destructive',
+    });
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,6 +155,7 @@ export default function AuthPage() {
   };
 
   return (
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ""}>
     <div className="min-h-screen bg-gradient-to-b from-background to-slate-50 dark:to-slate-950 flex flex-col items-center justify-center p-4">
       {/* Header */}
       <div className="mb-8 text-center">
@@ -226,6 +262,26 @@ export default function AuthPage() {
               <p className="text-center text-sm text-muted-foreground mt-4">
                 By signing up, you agree to our Terms of Service
               </p>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-muted"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="w-full flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme={theme === 'dark' ? 'filled_black' : 'outline'}
+                  shape="rectangular"
+                  width="100%"
+                />
+              </div>
             </form>
           </TabsContent>
 
@@ -281,16 +337,31 @@ export default function AuthPage() {
                   Forgot your password?
                 </Link>
               </div>
+
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-muted"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="w-full flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme={theme === 'dark' ? 'filled_black' : 'outline'}
+                  shape="rectangular"
+                  width="100%"
+                />
+              </div>
             </form>
           </TabsContent>
         </Tabs>
       </Card>
-
-      {/* Demo Info */}
-      <div className="mt-8 text-center text-sm text-muted-foreground max-w-md">
-        <p className="mb-2">Demo Mode</p>
-        <p>Try: alex@example.com / password, or create a new account</p>
-      </div>
     </div>
+    </GoogleOAuthProvider>
   );
 }
