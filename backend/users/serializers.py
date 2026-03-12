@@ -40,8 +40,8 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 class CustomUserSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         model = User
-        fields = ("id", "username", "email")
-        read_only_fields = ("id", "username", "email")
+        fields = ("id", "username", "email", "level", "exp", "streak", "best_streak", "last_activity_data", "avatar")
+        read_only_fields = ("id", "username", "email", "avatar")
 
 
 class LoginSerializer(TokenObtainPairSerializer):
@@ -50,5 +50,5 @@ class LoginSerializer(TokenObtainPairSerializer):
         user = User.objects.get(pk=self.user.id)
         serializer= CustomUserSerializer(user)
         data.update(
-            {'user': serializer.data})
+            {'data': serializer.data})
         return data
