@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Flame, Home, LogOut, Settings, User } from 'lucide-react';
 import { User as UserType } from '@/lib/types';
@@ -25,7 +25,7 @@ interface LoggedInNavbarProps {
 export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
   const router = useRouter();
   const maxEXP = 1000;
-  const expProgress = (user.totalEXP % maxEXP) / maxEXP * 100;
+  const expProgress = (user.exp % maxEXP) / maxEXP * 100;
 
   const handleLogout = () => {
     signOut();
@@ -49,14 +49,14 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
             </span>
             <Progress value={expProgress} className="h-2" />
             <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-              {user.totalEXP % 1000}/1K
+              {user.exp % 1000}/1K
             </span>
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-4">
             {/* Streak Badge */}
-            <StreakBadge streak={user.currentStreak} />
+            <StreakBadge streak={user.streak} />
 
             {/* Notifications */}
             <NotificationBell userId={user.id} />
@@ -65,8 +65,9 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer">
+                  {user.avatar && <AvatarImage src={user.avatar} alt={user.username} />}
                   <AvatarFallback className="bg-primary text-primary-foreground font-bold">
-                    {user.avatar}
+                    {user.username ? user.username[0].toUpperCase() : 'U'}
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
