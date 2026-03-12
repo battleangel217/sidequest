@@ -3,6 +3,11 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  level: number;
+  exp: number;
+  streak: number;
+  best_streak: 0;
+  last_activity_data: string;
   avatar?: string;
 }
 
@@ -16,6 +21,7 @@ export interface Community {
   inviteCode: string;
   members: string[];
   created: string;
+  isPrivate?: boolean;
 }
 
 export interface CommunityMember {
@@ -73,5 +79,5 @@ export interface Notification {
 export interface AuthUser {
   refresh: string;
   access: string;
-  data: object;
+  data: User;
 }
