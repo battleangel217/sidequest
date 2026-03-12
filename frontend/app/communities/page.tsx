@@ -18,27 +18,67 @@ import { LoggedInNavbar } from '@/components/logged-in-navbar';
 import { CommunityCard } from '@/components/community/community-card';
 import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities } from '@/lib/data';
-import { User } from '@/lib/types';
+import { AuthUser, User, Community } from '@/lib/types';
 import { Plus, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { json } from 'stream/consumers';
 
 export default function CommunitiesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [newCommunityName, setNewCommunityName] = useState('');
   const [newCommunityDesc, setNewCommunityDesc] = useState('');
+  const [isPrivate, setIsPrivate] = useState(false);
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
-    initializeStorage();
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/auth');
-      return;
-    }
-    setUser(currentUser);
-    setLoading(false);
+    const fetchCommunities = async () => {
+      initializeStorage();
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        router.push('/auth');
+        return;
+      }
+      
+      setUser(currentUser.data);
+      setUserData(currentUser);
+
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/communities/', {
+          headers: {
+            "Authorization": `Bearer ${currentUser.access}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Transform API data to match frontend types
+          const mappedCommunities: Community[] = data.map((c: any) => ({
+            ...c,
+            id: String(c.id),
+            isPrivate: c.is_private,
+            inviteCode: 'INVITE', // Placeholder as backend doesn't return this yet
+            createdBy: 'System', // Placeholder
+            memberCount: c.members ? c.members.length : 0,
+            members: c.members ? c.members.map(String) : [],
+            created: c.created_at
+          }));
+          setCommunities(mappedCommunities);
+        }
+      } catch (error) {
+        console.error('Failed to fetch communities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunities();
   }, [router]);
 
   if (loading || !user) {
@@ -49,12 +89,12 @@ export default function CommunitiesPage() {
     );
   }
 
-  const userCommunities = Object.values(mockCommunities).filter((c) =>
-    c.members.includes(user.id)
+  const userCommunities = communities.filter((c) =>
+    c.members.includes(String(user.id))
   );
 
-  const otherCommunities = Object.values(mockCommunities).filter(
-    (c) => !c.members.includes(user.id)
+  const otherCommunities = communities.filter(
+    (c) => !c.members.includes(String(user.id))
   );
 
   const filteredOther = otherCommunities.filter(
@@ -62,6 +102,45 @@ export default function CommunitiesPage() {
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleCreateCommunity = async () => {
+    const data = {
+      "name": newCommunityName,
+      "description": newCommunityDesc,
+      "is_private": isPrivate
+    }
+
+    try{
+      const response = await fetch('http://127.0.0.1:8000/api/communities/',
+        {
+          headers: {
+            "Content-Type":"application/json",
+            "Authorization":`Bearer ${userData?.access}`
+          },
+          method: "POST",
+          body: JSON.stringify(data)
+        }
+      );
+
+      if (!response.ok){
+        throw new Error("Mhmmm");
+      }
+
+      toast({
+        title: 'Community created',
+        description: 'Share link to friends to grow your community'
+      });
+
+
+    }catch (error){
+      const message = error instanceof Error ? error.message : 'Server Error';
+      toast({
+        title: 'Failed to Create',
+        description: message,
+        variant: 'destructive'
+      });
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -161,6 +240,36 @@ export default function CommunitiesPage() {
                 rows={3}
               />
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Visibility
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="public"
+                    checked={!isPrivate}
+                    onChange={() => setIsPrivate(false)}
+                    className="accent-primary"
+                  />
+                  Public (Anyone can find and join)
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="radio"
+                    name="visibility"
+                    value="private"
+                    checked={isPrivate}
+                    onChange={() => setIsPrivate(true)}
+                    className="accent-primary"
+                  />
+                  Private (Invite only)
+                </label>
+              </div>
+            </div>
           </div>
 
           <DialogFooter>
@@ -172,10 +281,11 @@ export default function CommunitiesPage() {
             </Button>
             <Button
               onClick={() => {
+                handleCreateCommunity();
                 // In a real app, this would create the community
                 setCreateOpen(false);
               }}
-              disabled={!newCommunityName.trim()}
+              disabled={!newCommunityName.trim() || !newCommunityDesc.trim()}
             >
               Create
             </Button>
