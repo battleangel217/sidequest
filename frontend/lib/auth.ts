@@ -3,7 +3,7 @@ import { mockUsers } from './data';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 
-const STORAGE_KEY = 'sidequest_auth_user';
+const STORAGE_KEY = process.env.NEXT_PUBLIC_STORAGE_KEY || 'sidequest_auth';
 const USERS_STORAGE_KEY = 'sidequest_users';
 
 // Initialize localStorage with mock data
@@ -20,6 +20,20 @@ export function getAllUsers(): Record<string, User> {
   if (typeof window === 'undefined') return mockUsers;
   const users = localStorage.getItem(USERS_STORAGE_KEY);
   return users ? JSON.parse(users) : mockUsers;
+}
+
+export function getCurrentUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+
+  const auth = localStorage.getItem(STORAGE_KEY);
+  if (!auth) return null;
+
+  try {
+    const authUser: AuthUser = JSON.parse(auth);
+    return authUser
+  } catch {
+    return null;
+  }
 }
 
 // Save users to storage
@@ -96,7 +110,28 @@ export async function signIn(email: string, password: string) {
 
   const userData: AuthUser = await response.json();
 
-  localStorage.setItem("userData", JSON.stringify(userData));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+
+  return userData;
+}
+
+// Sign in with Google
+export async function signInWithGoogle(token: string) {
+  if (typeof window === 'undefined') throw new Error('Not in browser');
+
+  const response = await fetch('http://127.0.0.1:8000/api/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error || err.details || "Google authentication failed");
+  }
+
+  const userData: AuthUser = await response.json();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
 
   return userData;
 }
