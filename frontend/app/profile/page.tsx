@@ -20,7 +20,7 @@ import { ProgressBar } from '@/components/progress/progress-bar';
 import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities, mockTasks } from '@/lib/data';
 import { User } from '@/lib/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LineChart,
   Line,
@@ -88,7 +88,7 @@ export default function ProfilePage() {
       router.push('/auth');
       return;
     }
-    setUser(currentUser);
+    setUser(currentUser.data);
     setLoading(false);
   }, [router]);
 
@@ -101,10 +101,11 @@ export default function ProfilePage() {
   }
 
   const nextLevelEXP = 1000;
-  const currentLevelEXP = user.totalEXP % nextLevelEXP;
+  const currentLevelEXP = user.exp % nextLevelEXP;
   const totalCommunities = Object.values(mockCommunities).filter((c) =>
     c.members.includes(user.id)
   ).length;
+  console.log(user)
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,8 +116,9 @@ export default function ProfilePage() {
         <div className="mb-8">
           <div className="flex items-end gap-6 mb-6">
             <Avatar className="h-24 w-24">
+              {user.avatar && <AvatarImage src={user.avatar} alt={user.username} />}
               <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-bold">
-                {user.avatar}
+                {user.username ? user.username[0].toUpperCase() : 'U'}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -134,7 +136,7 @@ export default function ProfilePage() {
             <Card className="p-4">
               <p className="text-sm text-muted-foreground mb-1">Total EXP</p>
               <div className="flex items-center gap-1">
-                <p className="text-3xl font-bold text-secondary">{user.totalEXP}</p>
+                <p className="text-3xl font-bold text-secondary">{user.exp}</p>
                 <Zap className="w-5 h-5 text-secondary" />
               </div>
             </Card>
@@ -144,7 +146,7 @@ export default function ProfilePage() {
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground mb-1">Current Streak</p>
-              <p className="text-3xl font-bold text-primary">{user.currentStreak}</p>
+              <p className="text-3xl font-bold text-primary">{user.streak}</p>
             </Card>
           </div>
 
@@ -159,9 +161,9 @@ export default function ProfilePage() {
 
           {/* Streak Card */}
           <StreakCard
-            currentStreak={user.currentStreak}
-            bestStreak={user.bestStreak}
-            lastActivityDate={user.lastActivityDate}
+            currentStreak={user.streak}
+            bestStreak={user.best_streak}
+            lastActivityDate={user.last_activity_data}
           />
         </div>
 
@@ -217,7 +219,7 @@ export default function ProfilePage() {
               </Card>
               <Card className="p-4">
                 <p className="text-sm text-muted-foreground mb-2">Streak Days</p>
-                <p className="text-2xl font-bold text-accent">{user.currentStreak}</p>
+                <p className="text-2xl font-bold text-accent">{user.streak}</p>
               </Card>
             </div>
           </TabsContent>
