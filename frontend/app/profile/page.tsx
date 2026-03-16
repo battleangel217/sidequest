@@ -32,6 +32,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Zap, TrendingUp, Users } from 'lucide-react';
+import { get } from 'http';
 
 // Mock EXP breakdown data
 const expBreakdownData = [
@@ -41,29 +42,31 @@ const expBreakdownData = [
 ];
 
 // Mock completed tasks
-const completedTasks = [
-  {
-    id: '1',
-    title: 'Solve LeetCode Problem',
-    community: 'Morning Code Challenge',
-    expReward: 150,
-    completedDate: '2026-03-02',
-  },
-  {
-    id: '2',
-    title: 'Complete 30-Minute Workout',
-    community: 'Fitness Legends',
-    expReward: 200,
-    completedDate: '2026-03-01',
-  },
-  {
-    id: '3',
-    title: 'Code Review',
-    community: 'Morning Code Challenge',
-    expReward: 100,
-    completedDate: '2026-02-28',
-  },
-];
+// const completedTasks = [
+//   {
+//     id: '1',
+//     title: 'Solve LeetCode Problem',
+//     community: 'Morning Code Challenge',
+//     expReward: 150,
+//     completedDate: '2026-03-02',
+//   },
+//   {
+//     id: '2',
+//     title: 'Complete 30-Minute Workout',
+//     community: 'Fitness Legends',
+//     expReward: 200,
+//     completedDate: '2026-03-01',
+//   },
+//   {
+//     id: '3',
+//     title: 'Code Review',
+//     community: 'Morning Code Challenge',
+//     expReward: 100,
+//     completedDate: '2026-02-28',
+//   },
+// ];
+
+
 
 // Chart data for weekly EXP
 const weeklyData = [
@@ -80,6 +83,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [completedTasks, setCompletedTasks] = useState<any[]>([]);
 
   useEffect(() => {
     initializeStorage();
@@ -89,6 +93,46 @@ export default function ProfilePage() {
       return;
     }
     setUser(currentUser.data);
+
+    const getUserInfo = async () => {
+      try{
+        const response = await fetch('http://localhost:8000/api/auth/me', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentUser.access}`,
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user info');
+        }
+
+        const data = await response.json();
+        setUser(data);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    }
+    getUserInfo();
+
+    const fetchCompletedTasks = async () => {
+      try{
+        const response = await fetch('http://localhost:8000/api/tasks/completed/', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentUser.access}`,
+          },
+        });
+
+        const task = await response.json()
+        setCompletedTasks(task);
+      } catch (error) {
+        console.error('Error fetching completed tasks:', error);
+      }
+    }
+    fetchCompletedTasks();
     setLoading(false);
   }, [router]);
 
@@ -103,7 +147,7 @@ export default function ProfilePage() {
   const nextLevelEXP = 1000;
   const currentLevelEXP = user.exp % nextLevelEXP;
   const totalCommunities = Object.values(mockCommunities).filter((c) =>
-    c.members.includes(user.id)
+    c.members.some((m) => m.userId === user.id)
   ).length;
   console.log(user)
 
@@ -142,7 +186,7 @@ export default function ProfilePage() {
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground mb-1">Communities</p>
-              <p className="text-3xl font-bold text-accent">{totalCommunities}</p>
+              <p className="text-3xl font-bold text-accent">{user.community_count}</p>
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground mb-1">Current Streak</p>
@@ -209,13 +253,13 @@ export default function ProfilePage() {
               <Card className="p-4">
                 <p className="text-sm text-muted-foreground mb-2">Week Total</p>
                 <div className="flex items-center gap-1">
-                  <p className="text-2xl font-bold text-primary">3,130</p>
+                  <p className="text-2xl font-bold text-primary">{user.weekly_total}</p>
                   <Zap className="w-4 h-4 text-primary" />
                 </div>
               </Card>
               <Card className="p-4">
                 <p className="text-sm text-muted-foreground mb-2">Daily Average</p>
-                <p className="text-2xl font-bold text-secondary">447</p>
+                <p className="text-2xl font-bold text-secondary">{user.weekly_total ? Math.round(user.weekly_total / 7) : 0}</p>
               </Card>
               <Card className="p-4">
                 <p className="text-sm text-muted-foreground mb-2">Streak Days</p>
@@ -228,7 +272,12 @@ export default function ProfilePage() {
           <TabsContent value="completed" className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground mb-6">Completed Tasks</h2>
             <Card>
-              <Table>
+              {completedTasks.length === 0 ? (
+                <p className="text-muted-foreground p-5 text-center">
+                Join communities and Complete more quests to earn EXP.
+              </p>
+              ): (
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Task</TableHead>
@@ -239,20 +288,21 @@ export default function ProfilePage() {
                 </TableHeader>
                 <TableBody>
                   {completedTasks.map((task) => (
-                    <TableRow key={task.id}>
-                      <TableCell className="font-medium">{task.title}</TableCell>
-                      <TableCell>{task.community}</TableCell>
+                    <TableRow key={task.task.id}>
+                      <TableCell className="font-medium">{task.task.title}</TableCell>
+                      <TableCell>{task.task.community}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <span className="font-bold text-secondary">{task.expReward}</span>
+                          <span className="font-bold text-secondary">{task.task.exp}</span>
                           <Zap className="w-4 h-4 text-secondary" />
                         </div>
                       </TableCell>
-                      <TableCell>{new Date(task.completedDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(task.task.completedDate).toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              )}
             </Card>
           </TabsContent>
 
