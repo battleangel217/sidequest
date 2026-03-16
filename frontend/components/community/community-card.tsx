@@ -29,7 +29,7 @@ export function CommunityCard({ community, userRank }: CommunityCardProps) {
       <div className="flex items-center gap-4 py-4 border-y border-border mb-4">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="w-4 h-4" />
-          <span>{community.memberCount} members</span>
+          <span>{community.members.length} members</span>
         </div>
         {userRank && (
           <div className="text-sm font-medium text-primary">
