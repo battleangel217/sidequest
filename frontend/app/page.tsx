@@ -10,7 +10,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-slate-50 dark:to-slate-950">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Flame className="w-8 h-8 text-accent" />
             <span className="text-2xl font-bold text-foreground">SideQuest</span>
@@ -27,7 +27,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 text-balance">
@@ -59,7 +59,7 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <section className="bg-card border-t border-border py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
               Why Choose SideQuest?
@@ -107,7 +107,7 @@ export default function LandingPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="grid md:grid-cols-4 gap-8 text-center">
           <div>
             <div className="text-4xl font-bold text-primary mb-2">10K+</div>
@@ -150,7 +150,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border bg-background py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">

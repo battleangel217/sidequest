@@ -96,72 +96,86 @@ export function InviteModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Invite Members</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] p-4 sm:p-6 rounded-xl gap-4">
+        <DialogHeader className="text-left space-y-1.5">
+          <DialogTitle className="text-lg sm:text-xl">Invite Members</DialogTitle>
+          <DialogDescription className="text-sm">
             Invite people to join {communityName}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="flex flex-col gap-4 py-2">
           {/* Invite Link */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium leading-none">
               Share Invite Link
             </label>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 w-full">
               <Input
                 readOnly
                 value={inviteLink}
-                className="text-xs"
+                className="text-xs h-9 flex-1 min-w-0"
               />
               <Button
                 variant="outline"
                 size="icon"
                 onClick={copyLink}
+                className="h-9 w-9 shrink-0"
               >
                 {copied ? (
-                  <Check className="w-4 h-4" />
+                  <Check className="h-4 w-4" />
                 ) : (
-                  <Copy className="w-4 h-4" />
+                  <Copy className="h-4 w-4" />
                 )}
               </Button>
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Invite code: <span className="font-mono font-bold">{inviteCode}</span>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
+              Invite code: <span className="font-mono font-bold select-all bg-muted px-1 py-0.5 rounded">{inviteCode}</span>
             </p>
           </div>
 
+          <div className="relative my-1">
+             <div className="absolute inset-0 flex items-center">
+               <span className="w-full border-t" />
+             </div>
+             <div className="relative flex justify-center text-xs uppercase">
+               <span className="bg-background px-2 text-muted-foreground">
+                 Or
+               </span>
+             </div>
+           </div>
+
           {/* Email Invite */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-2">
-              Or Send via Email
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium leading-none">
+              Send via Email
             </label>
-            <form onSubmit={handleEmailInvite} className="flex gap-2">
+            <form onSubmit={handleEmailInvite} className="flex items-center gap-2 w-full">
               <Input
                 type="email"
                 placeholder="friend@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="flex-1 h-9 min-w-0"
               />
-              <Button type="submit" size="icon" variant="outline">
-                <Mail className="w-4 h-4" />
+              <Button type="submit" size="icon" variant="outline" className="h-9 w-9 shrink-0">
+                <Mail className="h-4 w-4" />
               </Button>
             </form>
           </div>
 
           {/* Info */}
-          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-            <p className="text-xs text-muted-foreground">
+          <div className="bg-muted p-3 rounded-lg border border-border/50">
+            <p className="text-[10px] sm:text-xs text-muted-foreground leading-relaxed">
               Anyone with the invite link or code can join this community. Invites are available for 7 days.
             </p>
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="sm:justify-end">
           <Button
-            variant="outline"
+            variant="default"
+            className="w-full sm:w-auto"
             onClick={() => onOpenChange(false)}
           >
             Done

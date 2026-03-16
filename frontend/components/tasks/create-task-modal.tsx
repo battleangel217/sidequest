@@ -93,7 +93,7 @@ export function CreateTaskModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Task</DialogTitle>
           <DialogDescription>
@@ -122,7 +122,7 @@ export function CreateTaskModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">EXP Reward</label>
               <Input 
@@ -149,11 +149,11 @@ export function CreateTaskModal({
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isLoading || !title.trim() || !description.trim() || !expReward.trim()}>
+          <Button onClick={handleSubmit} disabled={isLoading || !title.trim() || !description.trim() || !expReward.trim()} className="w-full sm:w-auto">
             {isLoading ? 'Creating...' : 'Create Task'}
           </Button>
         </DialogFooter>
