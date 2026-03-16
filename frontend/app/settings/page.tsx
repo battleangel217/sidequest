@@ -30,7 +30,7 @@ export default function SettingsPage() {
       router.push('/auth');
       return;
     }
-    setUser(currentUser);
+    setUser(currentUser.data);
     setLoading(false);
   }, [router]);
 
