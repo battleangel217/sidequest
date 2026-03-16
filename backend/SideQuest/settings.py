@@ -38,6 +38,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://upstartpy.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:8000",
+    'https://sidequest-gk5d.onrender.com'
     
 ]
 
