@@ -25,20 +25,25 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-g-!kqvjzz+k&54z$nu@&ia_$rx=9u6p4qr(v7#cuc-t(ze)^07'
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-default-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'sidequest-gk5d.onrender.com',
+    'sidequest-chi.vercel.app'
+]
 
 CORS_ALLOW_ALL_ORIGINS = True
 # Also whitelist the production frontend domain explicitly (harmless when ALLOW_ALL is True)
 CORS_ALLOWED_ORIGINS = [
-    "https://upstartpy.vercel.app",
     "http://localhost:3000",
     "http://127.0.0.1:8000",
-    'https://sidequest-gk5d.onrender.com'
+    'https://sidequest-gk5d.onrender.com',
+    'https://sidequest-chi.vercel.app'
     
 ]
 
