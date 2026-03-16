@@ -53,7 +53,7 @@ export function CreateTaskModal({
       return;
     }
     
-    const response = await fetch(`http://localhost:8000/api/tasks/${communityId}/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${communityId}/`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${currentUser.access}`,

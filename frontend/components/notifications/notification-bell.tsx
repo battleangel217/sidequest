@@ -32,7 +32,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
       if (!currentUser) return;
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/notifications/', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/`, {
           headers: {
             'Authorization': `Bearer ${currentUser.access}`,
           },
@@ -64,7 +64,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     if (!currentUser) return;
 
     try {
-      await fetch('http://127.0.0.1:8000/api/notifications/', {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     if (!currentUser) return;
 
     try {
-      await fetch('http://127.0.0.1:8000/api/notifications/', {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/notifications/`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     setRespondingId(notificationId);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/invite/respond/${notificationId}/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/invite/respond/${notificationId}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

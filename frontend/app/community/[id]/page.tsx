@@ -47,7 +47,7 @@ export default function CommunityPage() {
 
     const communityInfo = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/communities/${communityId}/`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/${communityId}/`, {
           method: 'GET',
           headers: {
             "Authorization": `Bearer ${currentUser.access}`
@@ -101,7 +101,7 @@ export default function CommunityPage() {
 
     const getTask = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/tasks/${communityId}/`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${communityId}/`, {
           method: 'GET',
           headers: {
             "Authorization": `Bearer ${currentUser.access}`
@@ -138,7 +138,7 @@ export default function CommunityPage() {
     const fetchSubmissions = async () => {
       setSubmissionsLoading(true);
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/tasks/submissions/${communityId}/`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/submissions/${communityId}/`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${currentUser.access}`,

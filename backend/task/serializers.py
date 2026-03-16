@@ -7,7 +7,7 @@ User = get_user_model()
 
 class TaskSerializer(serializers.ModelSerializer):
     submission_status = serializers.SerializerMethodField()
-    community = serializers.CharField(source='task.community.name', read_only=True)
+    community = serializers.CharField(source='community_id.name', read_only=True)
 
     class Meta:
         model = TaskModel

@@ -11,6 +11,7 @@ export interface User {
   avatar?: string;
   community_count?: number;
   weekly_total?: number;
+  weekly_breakdown?: { day: string; exp: number }[];
 }
 
 // Community Types

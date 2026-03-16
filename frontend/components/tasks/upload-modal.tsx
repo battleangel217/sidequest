@@ -78,7 +78,7 @@ export function UploadModal({
       if (imageFile) formData.append('proof_image', imageFile);
       if (videoFile) formData.append('proof_video', videoFile);
 
-      const response = await fetch(`http://127.0.0.1:8000/api/tasks/submit/${taskId}/`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/submit/${taskId}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${currentUser.access}`,

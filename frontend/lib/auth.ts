@@ -58,7 +58,7 @@ export async function signUp(username: string, email: string, password: string) 
     password
   }
 
-  const response = await fetch('http://127.0.0.1:8000/api/auth/users/', 
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/`, 
     {
       method: "POST",
       headers: {"Content-Type":"application/json"},
@@ -94,7 +94,7 @@ export async function signIn(email: string, password: string) {
     password
   }
 
-  const response = await fetch('http://127.0.0.1:8000/api/auth/jwt/create/',
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/jwt/create/`,
     {
       method: "POST",
       headers: {"Content-Type": "application/json"},
@@ -119,7 +119,7 @@ export async function signIn(email: string, password: string) {
 export async function signInWithGoogle(token: string) {
   if (typeof window === 'undefined') throw new Error('Not in browser');
 
-  const response = await fetch('http://127.0.0.1:8000/api/auth/google', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/google`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token })

@@ -66,19 +66,6 @@ const expBreakdownData = [
 //   },
 // ];
 
-
-
-// Chart data for weekly EXP
-const weeklyData = [
-  { day: 'Mon', exp: 350 },
-  { day: 'Tue', exp: 420 },
-  { day: 'Wed', exp: 280 },
-  { day: 'Thu', exp: 510 },
-  { day: 'Fri', exp: 450 },
-  { day: 'Sat', exp: 600 },
-  { day: 'Sun', exp: 520 },
-];
-
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -96,7 +83,7 @@ export default function ProfilePage() {
 
     const getUserInfo = async () => {
       try{
-        const response = await fetch('http://localhost:8000/api/auth/me', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -118,7 +105,7 @@ export default function ProfilePage() {
 
     const fetchCompletedTasks = async () => {
       try{
-        const response = await fetch('http://localhost:8000/api/tasks/completed/', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/completed/`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -143,6 +130,16 @@ export default function ProfilePage() {
       </div>
     );
   }
+
+  const weeklyData = user.weekly_breakdown || [
+    { day: 'Mon', exp: 0 },
+    { day: 'Tue', exp: 0 },
+    { day: 'Wed', exp: 0 },
+    { day: 'Thu', exp: 0 },
+    { day: 'Fri', exp: 0 },
+    { day: 'Sat', exp: 0 },
+    { day: 'Sun', exp: 0 },
+  ];
 
   const nextLevelEXP = 1000;
   const currentLevelEXP = user.exp % nextLevelEXP;
@@ -288,16 +285,16 @@ export default function ProfilePage() {
                 </TableHeader>
                 <TableBody>
                   {completedTasks.map((task) => (
-                    <TableRow key={task.task.id}>
+                    <TableRow key={task.id}>
                       <TableCell className="font-medium">{task.task.title}</TableCell>
                       <TableCell>{task.task.community}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <span className="font-bold text-secondary">{task.task.exp}</span>
+                          <span className="font-bold text-secondary">{task.task.exp_reward}</span>
                           <Zap className="w-4 h-4 text-secondary" />
                         </div>
                       </TableCell>
-                      <TableCell>{new Date(task.task.completedDate).toLocaleDateString()}</TableCell>
+                      <TableCell>{new Date(task.updated_at).toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

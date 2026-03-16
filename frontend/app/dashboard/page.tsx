@@ -37,7 +37,7 @@ export default function DashboardPage() {
       setUserData(currentUser);
 
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/communities/', {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/`, {
           headers: {
             "Authorization": `Bearer ${currentUser.access}`
           }
@@ -82,7 +82,7 @@ export default function DashboardPage() {
       }
 
       try{
-        const response = await fetch('http://127.0.0.1:8000/api/tasks/pending/',
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/pending/`,
           {
             method: 'GET',
             headers: {
