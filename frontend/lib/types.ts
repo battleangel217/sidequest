@@ -9,6 +9,8 @@ export interface User {
   best_streak: 0;
   last_activity_data: string;
   avatar?: string;
+  community_count?: number;
+  weekly_total?: number;
 }
 
 // Community Types
@@ -16,10 +18,10 @@ export interface Community {
   id: string;
   name: string;
   description: string;
-  createdBy: string;
-  memberCount: number;
-  inviteCode: string;
-  members: string[];
+  admin_id: string;
+  members: CommunityMember[];
+  community_exp: number;
+  user_rank: number;
   created: string;
   isPrivate?: boolean;
 }
@@ -27,6 +29,7 @@ export interface Community {
 export interface CommunityMember {
   userId: string;
   username: string;
+  avatar?: string;
   level: number;
   communityEXP: number;
   weeklyEXP: number;
@@ -34,7 +37,7 @@ export interface CommunityMember {
 }
 
 // Task Types
-export type TaskFrequency = 'daily' | 'weekly';
+export type TaskType = 'daily' | 'weekly';
 export type TaskStatus = 'available' | 'pending' | 'approved' | 'rejected' | 'completed';
 
 export interface Task {
@@ -42,14 +45,15 @@ export interface Task {
   communityId: string;
   title: string;
   description: string;
-  expReward: number;
-  frequency: TaskFrequency;
-  dueTime?: string;
+  exp_reward: number;
+  task_type: TaskType;
+  due_time?: string;
   status: TaskStatus;
+  submission_status?: string | null;
   submittedBy?: string;
   proofUrl?: string;
   submissionDate?: string;
-  createdDate: string;
+  created_at: string;
 }
 
 export interface TaskSubmission {
@@ -65,14 +69,14 @@ export interface TaskSubmission {
 export type NotificationType = 'invite' | 'approval' | 'rejection' | 'streak_warning';
 
 export interface Notification {
-  id: string;
-  userId: string;
+  id: number;
+  user: number;
   type: NotificationType;
   title: string;
   message: string;
-  relatedId?: string;
-  read: boolean;
-  createdAt: string;
+  related_id?: number;
+  is_read: boolean;
+  created_at: string;
 }
 
 // Auth Types
