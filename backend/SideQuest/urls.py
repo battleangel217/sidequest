@@ -23,6 +23,9 @@ urlpatterns = [
         path('auth/', include('djoser.urls')),
         path('auth/', include('djoser.urls.jwt')),
         path('auth/', include('users.urls')),
-        path('communities/', include('community.urls'))
+        path('communities/', include('community.urls')),
+        path('tasks/', include('task.urls')),
+        path('invite/', include('invite.urls')),
+        path('notifications/', include('notification.urls')),
     ]))
 ]
