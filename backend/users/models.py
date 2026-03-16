@@ -20,3 +20,11 @@ class CustomUserModel(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    def update_level(self):
+        old_level = self.level
+        # Simple linear progression: Every 100 EXP = 1 Level
+        self.level = 1 + (self.exp // 100)
+        
+        # Return True if leveled up
+        return self.level > old_level
