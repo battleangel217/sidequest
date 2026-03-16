@@ -11,11 +11,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Image, Video, Loader2 } from 'lucide-react';
+import { getCurrentUser } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
 
 interface UploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  taskId: string;
   taskTitle: string;
   onSubmit: (proof: string) => void;
   isLoading?: boolean;
@@ -24,31 +27,91 @@ interface UploadModalProps {
 export function UploadModal({
   open,
   onOpenChange,
+  taskId,
   taskTitle,
   onSubmit,
   isLoading,
 }: UploadModalProps) {
-  const [proof, setProof] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [proofText, setProofText] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [videoPreview, setVideoPreview] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFileName(file.name);
-      // In a real app, you'd upload the file and get a URL
-      setProof(file.name);
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  const handleSubmit = () => {
-    if (!proof.trim()) {
-      return;
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setVideoFile(file);
+      setVideoPreview(URL.createObjectURL(file));
     }
-    onSubmit(proof);
-    setProof('');
-    setFileName('');
-    onOpenChange(false);
   };
+
+  const resetForm = () => {
+    setProofText('');
+    setImageFile(null);
+    setVideoFile(null);
+    setImagePreview('');
+    setVideoPreview('');
+  };
+
+  const handleSubmit = async () => {
+    if (!proofText.trim() && !imageFile && !videoFile) return;
+
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+
+    setSubmitting(true);
+
+    try {
+      const formData = new FormData();
+      if (proofText.trim()) formData.append('proof_text', proofText);
+      if (imageFile) formData.append('proof_image', imageFile);
+      if (videoFile) formData.append('proof_video', videoFile);
+
+      const response = await fetch(`http://127.0.0.1:8000/api/tasks/submit/${taskId}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentUser.access}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to submit proof');
+      }
+
+      onSubmit(proofText || 'proof submitted');
+      resetForm();
+      onOpenChange(false);
+
+      toast({
+        title: 'Proof Submitted!',
+        description: 'Your submission is pending community admin approval.',
+      });
+    } catch (error: any) {
+      console.error('Submit failed:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to submit proof. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const loading = isLoading || submitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -61,39 +124,71 @@ export function UploadModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* File Upload */}
+          {/* Image Upload */}
           <div>
-            <label className="block text-sm font-medium text-foreground mb-3">
-              Upload Proof (Video, Screenshot, etc)
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Upload Image (Screenshot, Photo)
             </label>
             <div className="relative">
               <input
                 type="file"
-                onChange={handleFileChange}
+                onChange={handleImageChange}
                 className="hidden"
-                id="proof-file"
-                accept="image/*,video/*,application/pdf"
+                id="proof-image"
+                accept="image/*"
               />
               <label
-                htmlFor="proof-file"
-                className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors flex flex-col items-center gap-2"
+                htmlFor="proof-image"
+                className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors flex flex-col items-center gap-2"
               >
-                <Upload className="w-6 h-6 text-muted-foreground" />
-                <div className="text-sm text-muted-foreground">
-                  <p className="font-medium text-foreground">Click to upload</p>
-                  <p className="text-xs">or drag and drop</p>
-                </div>
+                <Image className="w-5 h-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {imageFile ? imageFile.name : 'Click to upload image'}
+                </p>
               </label>
             </div>
-            {fileName && (
-              <div className="mt-2 flex items-center gap-2 p-2 bg-muted rounded">
-                <span className="text-sm text-foreground flex-1 truncate">{fileName}</span>
+            {imagePreview && (
+              <div className="mt-2 relative rounded-lg overflow-hidden border">
+                <img src={imagePreview} alt="Preview" className="w-full max-h-40 object-contain bg-black/5" />
                 <button
-                  onClick={() => {
-                    setFileName('');
-                    setProof('');
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
+                  onClick={() => { setImageFile(null); setImagePreview(''); }}
+                  className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Video Upload */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Upload Video (Optional)
+            </label>
+            <div className="relative">
+              <input
+                type="file"
+                onChange={handleVideoChange}
+                className="hidden"
+                id="proof-video"
+                accept="video/*"
+              />
+              <label
+                htmlFor="proof-video"
+                className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors flex flex-col items-center gap-2"
+              >
+                <Video className="w-5 h-5 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  {videoFile ? videoFile.name : 'Click to upload video'}
+                </p>
+              </label>
+            </div>
+            {videoPreview && (
+              <div className="mt-2 relative rounded-lg overflow-hidden border">
+                <video src={videoPreview} className="w-full max-h-40" controls />
+                <button
+                  onClick={() => { setVideoFile(null); setVideoPreview(''); }}
+                  className="absolute top-2 right-2 bg-background/80 rounded-full p-1 hover:bg-background"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -108,8 +203,8 @@ export function UploadModal({
             </label>
             <Textarea
               placeholder="Add any context or notes about your submission..."
-              value={proof && fileName ? proof + (proof.includes('\n') ? '' : '\n') : proof}
-              onChange={(e) => setProof(e.target.value)}
+              value={proofText}
+              onChange={(e) => setProofText(e.target.value)}
               className="resize-none"
               rows={3}
             />
@@ -120,15 +215,25 @@ export function UploadModal({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isLoading}
+            disabled={loading}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={!proof.trim() || isLoading}
+            disabled={(!proofText.trim() && !imageFile && !videoFile) || loading}
           >
-            {isLoading ? 'Submitting...' : 'Submit Proof'}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4 mr-2" />
+                Submit Proof
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
