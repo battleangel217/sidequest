@@ -9,6 +9,9 @@ from django.contrib.auth import get_user_model
 from .serializers import CustomUserSerializer
 from django.conf import settings
 import uuid
+from rest_framework.permissions import IsAuthenticated
+from datetime import timedelta
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -36,7 +39,7 @@ class GoogleSignupViews(APIView):
             user, created = User.objects.get_or_create(email=email)
             if created:
                 user.set_unusable_password()
-                user.username = f"{firstname}{lastname}{str(uuid.uuid4())[:4]}"
+                user.username = f"{firstname.lower()}{lastname.lower()}{str(uuid.uuid4())[:4]}"
                 user.email = email
                 user.save()
 
@@ -51,3 +54,24 @@ class GoogleSignupViews(APIView):
         
         except ValueError:
             return Response({"error":"Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UserView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        user = request.user
+
+        # Streak logic: If user hasn't completed a task yesterday or today, the streak is broken (0)
+        # But we only reset it for display purposes here.
+        today = timezone.now().date()
+        if user.last_activity_data:
+            last_activity_date = user.last_activity_data.date()
+            # If last activity was before yesterday, streak is broken
+            if last_activity_date < today - timedelta(days=1):
+                if user.streak > 0:
+                    user.streak = 0
+                    user.save()
+        
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
