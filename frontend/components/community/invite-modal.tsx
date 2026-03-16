@@ -13,6 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Copy, Mail, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getCurrentUser } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
+
 
 interface InviteModalProps {
   open: boolean;
@@ -30,6 +33,7 @@ export function InviteModal({
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [copied, setCopied] = useState(false);
+  const router = useRouter();
 
   const inviteLink = `${typeof window !== 'undefined' ? window.location.origin : ''}/invite/${inviteCode}`;
 
@@ -43,16 +47,51 @@ export function InviteModal({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleEmailInvite = (e: React.FormEvent) => {
+  const handleEmailInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      toast({ title: 'Error', description: 'You must be logged in to send invites.', variant: 'destructive' });
+      router.push('/login');
+      return;
+    }
 
-    // In a real app, this would send an email
-    toast({
-      title: 'Invite Sent!',
-      description: `Invitation sent to ${email}`,
-    });
-    setEmail('');
+    try{
+      const response = await fetch('http://localhost:8000/api/invite/send', 
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentUser.access}`,
+            },
+          body: JSON.stringify({
+            email,
+            community_id: inviteCode,
+            title: 'Community Invite',
+            message: `You've been invited to join ${communityName}!`
+          }),
+        }
+      );
+
+      if (!response.ok){
+        throw new Error('Failed to send invite');
+      }
+
+      toast({
+        title: 'Invite Sent!',
+        description: `Invitation sent to ${email}`,
+      });
+      setEmail('');
+
+    }catch (error){
+      const message = error instanceof Error ? error.message : 'Server Error';
+      toast({
+        title: 'Failed to Send',
+        description: message,
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
