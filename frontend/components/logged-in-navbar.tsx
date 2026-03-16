@@ -34,7 +34,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex justify-between items-center gap-4">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
