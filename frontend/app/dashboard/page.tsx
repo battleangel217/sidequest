@@ -13,6 +13,7 @@ import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities, mockUsers } from '@/lib/data';
 import { AuthUser, Community, User } from '@/lib/types';
 import { Plus, Users as UsersIcon, CheckCircle2 } from 'lucide-react';
+import { TaskCard } from '@/components/tasks/task-card';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [communities, setCommunities] = useState<Community[]>([])
   const [userData, setUserData] = useState<AuthUser | null>(null);
+  const [pendingTasks, setPendingTasks] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchCommunities = async () => {
@@ -48,11 +50,17 @@ export default function DashboardPage() {
             ...c,
             id: String(c.id),
             isPrivate: c.is_private,
-            inviteCode: 'INVITE', // Placeholder as backend doesn't return this yet
-            createdBy: 'System', // Placeholder
-            memberCount: c.members ? c.members.length : 0,
-            members: c.members ? c.members.map(String) : [],
-            created: c.created_at
+            members: c.members
+              ? c.members.map((m: any) => ({
+                  userId: String(m.user.id),
+                  username: m.user.username,
+                  level: m.user.level,
+                  communityEXP: m.community_exp || 0,
+                  weeklyEXP: m.weekly_exp || 0,
+                  joinedDate: m.joined_at,
+                }))
+              : [],
+            created: c.created_at,
           }));
           setCommunities(mappedCommunities);
         }
@@ -64,6 +72,33 @@ export default function DashboardPage() {
     };
 
     fetchCommunities();
+
+    const fetchPendingTasks = async () => {
+      const currentUser = getCurrentUser();
+      
+      if (!currentUser) {
+        router.push('/auth');
+        return;
+      }
+
+      try{
+        const response = await fetch('http://127.0.0.1:8000/api/tasks/pending/',
+          {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${currentUser.access}`
+            }
+          }
+        )
+
+        const task = await response.json()
+        console.log(task)
+        setPendingTasks(task)
+      }catch (error){
+        console.log("Server failed")
+      }
+    }
+    fetchPendingTasks();
   }, [router]);
 
   if (loading || !user) {
@@ -77,7 +112,7 @@ export default function DashboardPage() {
   }  
 
   const userCommunities = communities
-    .filter((c) => c.members.includes(String(user.id)))
+    .filter((c) => c.members.some((m) => m.userId === String(user.id)))
     .slice(0, 3);
 
   return (
@@ -157,14 +192,25 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-
-          <Card className="p-8 text-center">
-            <CheckCircle2 className="w-12 h-12 text-secondary mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-foreground mb-2">All Caught Up!</h3>
-            <p className="text-muted-foreground">
-              No pending task reviews. Complete more quests to earn EXP.
-            </p>
-          </Card>
+          {pendingTasks.length === 0 ? (
+            <Card className="p-8 text-center">
+              <CheckCircle2 className="w-12 h-12 text-secondary mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-foreground mb-2">All Caught Up!</h3>
+              <p className="text-muted-foreground">
+                No pending task reviews. Complete more quests to earn EXP.
+              </p>
+            </Card>
+          ) : (
+            <div className='grid gap-4'>
+              {pendingTasks.map((task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task.task}
+                />
+              ))}
+            </div>
+          )}
+          
         </div>
 
         {/* Quick Stats */}
