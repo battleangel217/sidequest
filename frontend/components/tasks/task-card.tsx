@@ -12,9 +12,10 @@ interface TaskCardProps {
 }
 
 export function TaskCard({ task, onSubmitProof }: TaskCardProps) {
-  const isDaily = task.frequency === 'daily';
-  const isAvailable = task.status === 'available';
-  const isPending = task.status === 'pending';
+  const isDaily = task.task_type === 'daily';
+  const submissionStatus = task.submission_status;
+  const isPending = submissionStatus === 'pending';
+  const isAvailable = task.status === 'available' && !submissionStatus;
 
   return (
     <Card className="p-6 hover:shadow-md transition-shadow">
@@ -32,22 +33,25 @@ export function TaskCard({ task, onSubmitProof }: TaskCardProps) {
         <div className="text-right ml-4">
           <div className="flex items-center gap-1 text-accent font-bold">
             <Zap className="w-4 h-4" />
-            {task.expReward}
+            {task.exp_reward}
           </div>
           <p className="text-xs text-muted-foreground">EXP</p>
         </div>
       </div>
 
       <div className="flex items-center gap-4 py-3 border-t border-b border-border mb-4">
-        {task.dueTime && (
+        {task.due_time && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Clock className="w-3 h-3" />
-            Due {task.dueTime}
+            Due {new Date(task.due_time).toLocaleString(undefined, {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+            })}
           </div>
         )}
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <Calendar className="w-3 h-3" />
-          {new Date(task.createdDate).toLocaleDateString()}
+          {task.created_at && new Date(task.created_at).toLocaleDateString()}
         </div>
       </div>
 
@@ -74,7 +78,7 @@ export function TaskCard({ task, onSubmitProof }: TaskCardProps) {
             size="sm"
             variant="outline"
           >
-            {isPending ? 'Pending Review' : task.status}
+            {isPending ? 'Pending Review' : (submissionStatus || task.status)}
           </Button>
         )}
       </div>
