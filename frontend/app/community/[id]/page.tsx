@@ -7,9 +7,11 @@ import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LoggedInNavbar } from '@/components/logged-in-navbar';
 import { TaskCard } from '@/components/tasks/task-card';
+import { ReviewSubmissionsTab } from '@/components/tasks/review-submissions-tab';
 import { UploadModal } from '@/components/tasks/upload-modal';
 import { InviteModal } from '@/components/community/invite-modal';
 import { MemberRow } from '@/components/community/member-row';
+import { CreateTaskModal } from '@/components/tasks/create-task-modal';
 import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities, mockTasks, mockCommunityMembers } from '@/lib/data';
 import { User, Community, Task } from '@/lib/types';
@@ -28,7 +30,10 @@ export default function CommunityPage() {
   const [loading, setLoading] = useState(true);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [inviteOpen, setInviteOpen] = useState(false);
+  const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissionsLoading, setSubmissionsLoading] = useState(false);
 
   useEffect(() => {
     initializeStorage();
@@ -37,22 +42,126 @@ export default function CommunityPage() {
       router.push('/auth');
       return;
     }
+    
+    setUser(currentUser.data);
 
-    const selectedCommunity = mockCommunities[communityId];
-    if (!selectedCommunity) {
-      router.push('/dashboard');
-      return;
+    const communityInfo = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/communities/${communityId}/`, {
+          method: 'GET',
+          headers: {
+            "Authorization": `Bearer ${currentUser.access}`
+          },
+        });
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            router.push('/dashboard');
+            return;
+          } else if (response.status === 401) {
+            router.push('/auth');
+            return;
+          } else {
+            throw new Error("Server Error");
+          }
+        }
+
+        const data = await response.json();
+
+        const transformed: Community = {
+          ...data,
+          id: String(data.id),
+          isPrivate: data.is_private,
+          community_exp: data.community_exp || 0,
+          members: data.members
+            ? data.members.map((m: any) => ({
+                userId: String(m.user.id),
+                username: m.user.username,
+                avatar: m.user.avatar,
+                level: m.user.level,
+                communityEXP: m.community_exp || 0,
+                user_rank: m.user_rank || 0,
+                weeklyEXP: m.weekly_exp || 0,
+                joinedDate: m.joined_at,
+              }))
+            : [],
+          created: data.created_at,
+        };
+
+        setCommunity(transformed);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    setUser(currentUser);
-    setCommunity(selectedCommunity);
-    setTasks(
-      Object.values(mockTasks)
-        .filter((t) => t.communityId === communityId)
-        .sort((a, b) => (a.frequency === 'daily' ? -1 : 1))
-    );
-    setLoading(false);
+    setUser(currentUser.data);
+    communityInfo();
+
+    const getTask = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/tasks/${communityId}/`, {
+          method: 'GET',
+          headers: {
+            "Authorization": `Bearer ${currentUser.access}`
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch tasks");
+        }
+
+        const data = await response.json();
+        setTasks(data);
+      }catch (error) {
+        console.error('Failed to fetch tasks:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch tasks. Please try again later.',
+          variant: 'destructive',
+        });
+      }
+    }
+    getTask();
   }, [router, communityId]);
+
+  // Fetch pending submissions for admin
+  useEffect(() => {
+    if (!user || !community) return;
+    const isAdminCheck = user.id === community.admin_id;
+    if (!isAdminCheck) return;
+
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+
+    const fetchSubmissions = async () => {
+      setSubmissionsLoading(true);
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/tasks/submissions/${communityId}/`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${currentUser.access}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSubmissions(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch submissions:', error);
+      } finally {
+        setSubmissionsLoading(false);
+      }
+    };
+
+    fetchSubmissions();
+  }, [user, community, communityId]);
+
+  const handleSubmissionReviewed = (submissionId: number, newStatus: string) => {
+    setSubmissions((prev) => prev.filter((s) => s.id !== submissionId));
+  };
 
   const handleTaskProofSubmit = (proof: string) => {
     if (!selectedTaskId) return;
@@ -70,6 +179,23 @@ export default function CommunityPage() {
     setSelectedTaskId(null);
   };
 
+  const handleCreateTask = (newTaskData: { title: string; description: string; exp_reward: number; task_type: 'daily' | 'weekly' }) => {
+    const newTask: Task = {
+      id: `task-${Date.now()}`,
+      communityId,
+      ...newTaskData,
+      status: 'available',
+      created_at: new Date().toISOString(),
+    };
+
+    setTasks([...tasks, newTask]);
+    setCreateTaskOpen(false);
+    toast({
+      title: 'Task Created',
+      description: 'The new task has been added to the community.',
+    });
+  };
+
   if (loading || !user || !community) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -78,9 +204,11 @@ export default function CommunityPage() {
     );
   }
 
-  const dailyTasks = tasks.filter((t) => t.frequency === 'daily');
-  const weeklyTasks = tasks.filter((t) => t.frequency === 'weekly');
-  const members = mockCommunityMembers[community.id] || [];
+  console.log(tasks)
+  const dailyTasks = tasks.filter((t) => t.task_type === 'daily');
+  const weeklyTasks = tasks.filter((t) => t.task_type === 'weekly');
+  const members = community.members
+  const isAdmin = user.id === community.admin_id;
   const leaderboardMembers = [...members].sort((a, b) => b.weeklyEXP - a.weeklyEXP);
 
   return (
@@ -96,6 +224,13 @@ export default function CommunityPage() {
               <p className="text-muted-foreground max-w-2xl">{community.description}</p>
             </div>
             <div className="flex gap-2">
+              {isAdmin && (
+                <Button
+                  onClick={() => setCreateTaskOpen(true)}
+                >
+                  Create Task
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => setInviteOpen(true)}
@@ -110,16 +245,16 @@ export default function CommunityPage() {
           <div className="grid grid-cols-3 gap-4">
             <Card className="p-4">
               <p className="text-sm text-muted-foreground">Members</p>
-              <p className="text-2xl font-bold text-primary">{community.memberCount}</p>
+              <p className="text-2xl font-bold text-primary">{community.members.length}</p>
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground">Your Rank</p>
-              <p className="text-2xl font-bold text-secondary">#3</p>
+              <p className="text-2xl font-bold text-secondary">#{community.user_rank}</p>
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground">Community EXP</p>
               <div className="flex items-center gap-1">
-                <p className="text-2xl font-bold text-accent">428</p>
+                <p className="text-2xl font-bold text-accent">{community.community_exp}</p>
                 <Zap className="w-5 h-5 text-accent" />
               </div>
             </Card>
@@ -133,6 +268,16 @@ export default function CommunityPage() {
             <TabsTrigger value="weekly">Weekly Tasks</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="review" className="relative">
+                Review
+                {submissions.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-amber-500 text-white">
+                    {submissions.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Daily Tasks */}
@@ -208,6 +353,18 @@ export default function CommunityPage() {
               ))}
             </Card>
           </TabsContent>
+
+          {/* Review Tab (Admin Only) */}
+          {isAdmin && (
+            <TabsContent value="review" className="space-y-4">
+              <ReviewSubmissionsTab
+                communityId={communityId}
+                submissions={submissions}
+                onSubmissionReviewed={handleSubmissionReviewed}
+                loading={submissionsLoading}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 
@@ -215,15 +372,22 @@ export default function CommunityPage() {
       <UploadModal
         open={uploadOpen}
         onOpenChange={setUploadOpen}
+        taskId={selectedTaskId || ''}
         taskTitle={tasks.find((t) => t.id === selectedTaskId)?.title || ''}
         onSubmit={handleTaskProofSubmit}
+      />
+
+      <CreateTaskModal
+        open={createTaskOpen}
+        onOpenChange={setCreateTaskOpen}
+        onSubmit={handleCreateTask}
       />
 
       <InviteModal
         open={inviteOpen}
         onOpenChange={setInviteOpen}
         communityName={community.name}
-        inviteCode={community.inviteCode}
+        inviteCode={community.id}
       />
     </div>
   );
