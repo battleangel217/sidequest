@@ -38,10 +38,23 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
+    community_count = serializers.SerializerMethodField()
+    weekly_total = serializers.SerializerMethodField()
+
     class Meta(UserSerializer.Meta):
         model = User
-        fields = ("id", "username", "email", "level", "exp", "streak", "best_streak", "last_activity_data", "avatar")
-        read_only_fields = ("id", "username", "email", "avatar")
+        fields = ("id", "username", "email", "level", "exp", "streak", "best_streak", "last_activity_data", "avatar", "community_count", "weekly_total")
+        read_only_fields = ("id", "username", "email", "avatar", "community_count", "weekly_total")
+    
+    def get_community_count(self, obj):
+        from community.models import MembershipModel
+        return MembershipModel.objects.filter(user=obj).count()
+
+    def get_weekly_total(self, obj):
+        from community.models import MembershipModel
+        from django.db.models import Sum
+        result = MembershipModel.objects.filter(user=obj).aggregate(Sum('weekly_exp'))
+        return result['weekly_exp__sum'] or 0
 
 
 class LoginSerializer(TokenObtainPairSerializer):
