@@ -3,6 +3,7 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { CommunityMember } from '@/lib/types';
+import { AvatarImage } from '@radix-ui/react-avatar';
 import { Zap } from 'lucide-react';
 
 interface MemberRowProps {
@@ -28,6 +29,7 @@ export function MemberRow({ member, isLeaderboard, rank }: MemberRowProps) {
           </div>
         )}
         <Avatar className="h-10 w-10">
+          {member.avatar && <AvatarImage src={member.avatar} alt={member.username}/>}
           <AvatarFallback className="bg-primary text-primary-foreground font-bold">
             {initials}
           </AvatarFallback>
