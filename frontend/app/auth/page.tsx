@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,14 @@ import { useTheme } from 'next-themes';
 export default function AuthPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('signup');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sign Up State
   const [signUpEmail, setSignUpEmail] = useState('');
@@ -277,7 +282,7 @@ export default function AuthPage() {
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap
-                  theme={theme === 'dark' ? 'filled_black' : 'outline'}
+                  theme={mounted && resolvedTheme === 'dark' ? 'filled_black' : 'outline'}
                   shape="rectangular"
                   width="100%"
                 />
@@ -352,7 +357,7 @@ export default function AuthPage() {
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
                   useOneTap
-                  theme={theme === 'dark' ? 'filled_black' : 'outline'}
+                  theme={mounted && resolvedTheme === 'dark' ? 'filled_black' : 'outline'}
                   shape="rectangular"
                   width="100%"
                 />
