@@ -34,7 +34,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex justify-between items-center gap-4">
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <div className="flex flex-col p-2 gap-2 mb-2">
                   <p className="font-semibold text-foreground">{user.username}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
