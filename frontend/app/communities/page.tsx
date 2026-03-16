@@ -162,10 +162,15 @@ export default function CommunitiesPage() {
               <h1 className="text-4xl font-bold text-foreground">Communities</h1>
               <p className="text-muted-foreground">Find and join communities</p>
             </div>
-            <Button onClick={() => setCreateOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Community
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setCreateOpen(true)} className="hidden sm:flex">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Community
+              </Button>
+              <Button onClick={() => setCreateOpen(true)} size="icon" className="sm:hidden h-8 w-8">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
 

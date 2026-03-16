@@ -263,13 +263,13 @@ export default function CommunityPage() {
 
         {/* Tabs */}
         <Tabs defaultValue="daily" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="daily">Daily Tasks</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly Tasks</TabsTrigger>
-            <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
+          <TabsList className="w-full h-auto overflow-x-auto justify-start sm:justify-center flex-nowrap bg-muted p-1">
+            <TabsTrigger value="daily" className="shrink-0 flex-1 min-w-[100px]">Daily Tasks</TabsTrigger>
+            <TabsTrigger value="weekly" className="shrink-0 flex-1 min-w-[100px]">Weekly Tasks</TabsTrigger>
+            <TabsTrigger value="members" className="shrink-0 flex-1 min-w-[80px]">Members</TabsTrigger>
+            <TabsTrigger value="leaderboard" className="shrink-0 flex-1 min-w-[100px]">Leaderboard</TabsTrigger>
             {isAdmin && (
-              <TabsTrigger value="review" className="relative">
+              <TabsTrigger value="review" className="relative shrink-0 flex-1 min-w-[80px]">
                 Review
                 {submissions.length > 0 && (
                   <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-amber-500 text-white">

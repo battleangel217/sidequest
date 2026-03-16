@@ -19,7 +19,7 @@ import { StreakCard } from '@/components/streaks/streak-card';
 import { ProgressBar } from '@/components/progress/progress-bar';
 import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities, mockTasks } from '@/lib/data';
-import { User } from '@/lib/types';
+import { User, Community } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LineChart,
@@ -35,11 +35,11 @@ import { Zap, TrendingUp, Users } from 'lucide-react';
 import { get } from 'http';
 
 // Mock EXP breakdown data
-const expBreakdownData = [
-  { name: 'Morning Code', exp: 450 },
-  { name: 'Fitness', exp: 680 },
-  { name: 'Writing', exp: 320 },
-];
+// const expBreakdownData = [
+//   { name: 'Morning Code', exp: 450 },
+//   { name: 'Fitness', exp: 680 },
+//   { name: 'Writing', exp: 320 },
+// ];
 
 // Mock completed tasks
 // const completedTasks = [
@@ -71,6 +71,8 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
+  const [userCommunities, setUserCommunities] = useState<Community[]>([]);
+  const [userCommunityEXP, setUserCommunityEXP] = useState<any[]>([]);
 
   useEffect(() => {
     initializeStorage();
@@ -120,6 +122,58 @@ export default function ProfilePage() {
       }
     }
     fetchCompletedTasks();
+
+    const fetchCommunities = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/`, {
+          headers: {
+            "Authorization": `Bearer ${currentUser.access}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          // Filter communities where the user is a member
+          const mappedCommunities: Community[] = data.map((c: any) => ({
+            ...c,
+            id: String(c.id),
+            isPrivate: c.is_private,
+            members: c.members
+              ? c.members.map((m: any) => ({
+                  userId: String(m.user.id),
+                  username: m.user.username,
+                  level: m.user.level,
+                  communityEXP: m.community_exp || 0,
+                  weeklyEXP: m.weekly_exp || 0,
+                  joinedDate: m.joined_at,
+                }))
+              : [],
+            created: c.created_at,
+          }));
+
+          const memberCommunities = mappedCommunities.filter(c => 
+            c.members.some(m => m.userId === String(currentUser.data.id))
+          );
+          
+          setUserCommunities(memberCommunities);
+
+          // Calculate EXP per community for the breakdown
+          const expData = memberCommunities.map(community => {
+            const memberData = community.members.find(m => m.userId === String(currentUser.data.id));
+            return {
+              name: community.name,
+              exp: memberData ? memberData.communityEXP : 0,
+            };
+          }).sort((a, b) => b.exp - a.exp); // Sort by highest EXP
+
+          setUserCommunityEXP(expData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch communities:', error);
+      }
+    };
+
+    fetchCommunities();
     setLoading(false);
   }, [router]);
 
@@ -155,15 +209,15 @@ export default function ProfilePage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Header */}
         <div className="mb-8">
-          <div className="flex items-end gap-6 mb-6">
-            <Avatar className="h-24 w-24">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 sm:gap-6 mb-6">
+            <Avatar className="h-24 w-24 shrink-0">
               {user.avatar && <AvatarImage src={user.avatar} alt={user.username} />}
               <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-primary-foreground text-2xl font-bold">
                 {user.username ? user.username[0].toUpperCase() : 'U'}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h1 className="text-4xl font-bold text-foreground">{user.username}</h1>
+            <div className="text-center sm:text-left min-w-0 flex-1 overflow-hidden">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground break-all">{user.username}</h1>
               <p className="text-muted-foreground">Level {user.level} Quester</p>
             </div>
           </div>
@@ -210,10 +264,10 @@ export default function ProfilePage() {
 
         {/* Tabs */}
         <Tabs defaultValue="progress" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="progress">Progress</TabsTrigger>
-            <TabsTrigger value="completed">Completed Tasks</TabsTrigger>
-            <TabsTrigger value="breakdown">EXP Breakdown</TabsTrigger>
+          <TabsList className="w-full h-auto flex flex-col sm:grid sm:grid-cols-3 bg-muted p-1">
+            <TabsTrigger value="progress" className="w-full">Progress</TabsTrigger>
+            <TabsTrigger value="completed" className="w-full">Completed Tasks</TabsTrigger>
+            <TabsTrigger value="breakdown" className="w-full">EXP Breakdown</TabsTrigger>
           </TabsList>
 
           {/* Progress Tab */}
@@ -221,7 +275,7 @@ export default function ProfilePage() {
             <h2 className="text-2xl font-bold text-foreground mb-6">Weekly Progress</h2>
             <Card className="p-6">
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={weeklyData}>
+                <LineChart data={weeklyData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
                   <XAxis dataKey="day" stroke="var(--color-muted-foreground)" />
                   <YAxis stroke="var(--color-muted-foreground)" />
@@ -306,25 +360,32 @@ export default function ProfilePage() {
           {/* EXP Breakdown Tab */}
           <TabsContent value="breakdown" className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground mb-6">EXP by Community</h2>
-            <div className="grid md:grid-cols-3 gap-4">
-              {expBreakdownData.map((item) => (
-                <Card key={item.name} className="p-6">
-                  <p className="text-sm text-muted-foreground mb-2">{item.name}</p>
-                  <div className="flex items-center gap-2 mb-4">
-                    <p className="text-3xl font-bold text-primary">{item.exp}</p>
-                    <Zap className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary"
-                      style={{
-                        width: `${(item.exp / 680) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </Card>
-              ))}
-            </div>
+            {userCommunityEXP.length === 0 ? (
+              <Card className="p-8 text-center">
+                <p className="text-muted-foreground">Join communities to see your EXP breakdown!</p>
+              </Card>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-4">
+                {userCommunityEXP.map((item) => (
+                  <Card key={item.name} className="p-6">
+                    <p className="text-sm text-muted-foreground mb-2 truncate" title={item.name}>{item.name}</p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <p className="text-3xl font-bold text-primary">{item.exp}</p>
+                      <Zap className="w-6 h-6 text-primary" />
+                    </div>
+                    {/* Progress bar relative to max exp in the list */}
+                    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary"
+                        style={{
+                          width: `${userCommunityEXP.length > 0 ? (item.exp / Math.max(...userCommunityEXP.map(i => i.exp), 1)) * 100 : 0}%`,
+                        }}
+                      />
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </main>
