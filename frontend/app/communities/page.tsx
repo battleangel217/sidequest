@@ -63,11 +63,17 @@ export default function CommunitiesPage() {
             ...c,
             id: String(c.id),
             isPrivate: c.is_private,
-            inviteCode: 'INVITE', // Placeholder as backend doesn't return this yet
-            createdBy: 'System', // Placeholder
-            memberCount: c.members ? c.members.length : 0,
-            members: c.members ? c.members.map(String) : [],
-            created: c.created_at
+            members: c.members
+              ? c.members.map((m: any) => ({
+                  userId: String(m.user.id),
+                  username: m.user.username,
+                  level: m.user.level,
+                  communityEXP: m.community_exp || 0,
+                  weeklyEXP: m.weekly_exp || 0,
+                  joinedDate: m.joined_at,
+                }))
+              : [],
+            created: c.created_at,
           }));
           setCommunities(mappedCommunities);
         }
@@ -90,11 +96,11 @@ export default function CommunitiesPage() {
   }
 
   const userCommunities = communities.filter((c) =>
-    c.members.includes(String(user.id))
+    c.members.some((m) => m.userId === String(user.id))
   );
 
   const otherCommunities = communities.filter(
-    (c) => !c.members.includes(String(user.id))
+    (c) => !c.members.some((m) => m.userId === String(user.id))
   );
 
   const filteredOther = otherCommunities.filter(
@@ -126,6 +132,8 @@ export default function CommunitiesPage() {
         throw new Error("Mhmmm");
       }
 
+      const community = await response.json();
+      router.push(`/community/${community.id}`);
       toast({
         title: 'Community created',
         description: 'Share link to friends to grow your community'
