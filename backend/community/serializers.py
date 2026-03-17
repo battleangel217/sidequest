@@ -19,7 +19,7 @@ class CommunitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CommunityModel
-        fields = ["id", "name", "description", "is_private", "created_at", "created_by", "admin_id", "members", "user_rank"]
+        fields = ["id", "name", "description", "is_private", "created_at", "created_by", "admin_id", "members", "user_rank", "community_exp"]
         read_only_fields = ("id", "created_at", "members", "admin_id", "created_by", "user_rank")
 
     def get_members(self, obj):

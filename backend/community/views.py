@@ -44,3 +44,12 @@ class CommunityDetailsViews(APIView):
         serializer = CommunitySerializer(data, context={'request': request})
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def delete(self, request, community_id):
+        community = get_object_or_404(CommunityModel, id=community_id)
+
+        if community.created_by != request.user:
+            return Response({"error": "Only the community creator can delete this community"}, status=status.HTTP_403_FORBIDDEN)
+
+        community.delete()
+        return Response({"message": "Community deleted successfully"}, status=status.HTTP_200_OK)
