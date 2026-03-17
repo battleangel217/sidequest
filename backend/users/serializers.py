@@ -62,6 +62,10 @@ class CustomUserSerializer(UserSerializer):
 class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
+        
+        if not self.user.is_active:
+             raise serializers.ValidationError("User account is disabled or email is not verified.")
+             
         user = User.objects.get(pk=self.user.id)
         serializer= CustomUserSerializer(user)
         data.update(
