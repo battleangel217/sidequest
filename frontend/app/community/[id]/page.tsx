@@ -12,8 +12,7 @@ import { UploadModal } from '@/components/tasks/upload-modal';
 import { InviteModal } from '@/components/community/invite-modal';
 import { MemberRow } from '@/components/community/member-row';
 import { CreateTaskModal } from '@/components/tasks/create-task-modal';
-import { getCurrentUser, initializeStorage } from '@/lib/auth';
-import { mockCommunities, mockTasks, mockCommunityMembers } from '@/lib/data';
+import { getCurrentUser } from '@/lib/auth';
 import { User, Community, Task } from '@/lib/types';
 import { Share2, Users, Zap, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -48,7 +47,6 @@ export default function CommunityPage() {
 
   useEffect(() => {
     const initPage = async () => {
-      initializeStorage();
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         router.push('/auth');
@@ -79,6 +77,47 @@ export default function CommunityPage() {
           }
 
           const data = await response.json();
+
+          // Check if user is member
+          const isMember = data.members && data.members.some((m: any) => String(m.user.id) === String(currentUser.data.id));
+
+          if (!isMember) {
+            try {
+              const joinResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/${communityId}/join/`, {
+                  method: 'POST',
+                  headers: {
+                      "Authorization": `Bearer ${currentUser.access}`,
+                      "Content-Type": "application/json"
+                  },
+              });
+
+              if (joinResponse.ok) {
+                // Add current user to members list locally
+                const newMember = {
+                  user: {
+                    id: currentUser.data.id,
+                    username: currentUser.data.username,
+                    avatar: currentUser.data.avatar,
+                    level: currentUser.data.level,
+                  },
+                  community_exp: 0,
+                  weekly_exp: 0,
+                  joined_at: new Date().toISOString(),
+                  // user_rank might be missing, default to 0 in transformation
+                };
+                
+                if (!data.members) data.members = [];
+                data.members.push(newMember);
+                
+                toast({
+                  title: "Joined Community",
+                  description: `You have successfully joined ${data.name}!`,
+                });
+              }
+            } catch (err) {
+              console.error("Failed to join community automatically", err);
+            }
+          }
 
           const transformed: Community = {
             ...data,

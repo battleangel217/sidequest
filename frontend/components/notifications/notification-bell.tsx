@@ -169,7 +169,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     notification.type === 'invite' && !notification.is_read;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="w-5 h-5" />

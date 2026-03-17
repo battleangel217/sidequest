@@ -1,26 +1,8 @@
 import { AuthUser, User } from './types';
-import { mockUsers } from './data';
 import { useToast } from '@/hooks/use-toast';
 import { toast } from 'sonner';
 
 const STORAGE_KEY = process.env.NEXT_PUBLIC_STORAGE_KEY || 'sidequest_auth';
-const USERS_STORAGE_KEY = 'sidequest_users';
-
-// Initialize localStorage with mock data
-export function initializeStorage() {
-  if (typeof window === 'undefined') return;
-
-  if (!localStorage.getItem(USERS_STORAGE_KEY)) {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(mockUsers));
-  }
-}
-
-// Get all users from storage
-export function getAllUsers(): Record<string, User> {
-  if (typeof window === 'undefined') return mockUsers;
-  const users = localStorage.getItem(USERS_STORAGE_KEY);
-  return users ? JSON.parse(users) : mockUsers;
-}
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   if (typeof window === 'undefined') return null;
@@ -49,12 +31,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   } catch {
     return null;
   }
-}
-
-// Save users to storage
-export function saveUsers(users: Record<string, User>) {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
 }
 
 // Sign up a new user
@@ -155,24 +131,6 @@ export async function signInWithGoogle(token: string) {
 export function signOut() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY);
-}
-
-// Update user profile
-export function updateUser(userId: string, updates: Partial<User>): User {
-  if (typeof window === 'undefined') throw new Error('Not in browser');
-
-  const users = getAllUsers();
-  const user = users[userId];
-
-  if (!user) {
-    throw new Error('User not found');
-  }
-
-  const updatedUser = { ...user, ...updates };
-  users[userId] = updatedUser;
-  saveUsers(users);
-
-  return updatedUser;
 }
 
 // Check if user is authenticated

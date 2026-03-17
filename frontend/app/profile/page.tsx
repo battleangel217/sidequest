@@ -17,8 +17,7 @@ import {
 import { LoggedInNavbar } from '@/components/logged-in-navbar';
 import { StreakCard } from '@/components/streaks/streak-card';
 import { ProgressBar } from '@/components/progress/progress-bar';
-import { getCurrentUser, initializeStorage } from '@/lib/auth';
-import { mockCommunities, mockTasks } from '@/lib/data';
+import { getCurrentUser } from '@/lib/auth';
 import { User, Community } from '@/lib/types';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -76,7 +75,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const initProfile = async () => {
-      initializeStorage();
       const currentUser = await getCurrentUser();
       
       if (!currentUser) {
@@ -150,10 +148,6 @@ export default function ProfilePage() {
 
   const nextLevelEXP = 1000;
   const currentLevelEXP = user.exp % nextLevelEXP;
-  const totalCommunities = Object.values(mockCommunities).filter((c) =>
-    c.members.some((m) => m.userId === user.id)
-  ).length;
-  console.log(user)
 
   return (
     <div className="min-h-screen bg-background">

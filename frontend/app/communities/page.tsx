@@ -16,8 +16,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { LoggedInNavbar } from '@/components/logged-in-navbar';
 import { CommunityCard } from '@/components/community/community-card';
-import { getCurrentUser, initializeStorage } from '@/lib/auth';
-import { mockCommunities } from '@/lib/data';
+import { getCurrentUser } from '@/lib/auth';
 import { AuthUser, User, Community } from '@/lib/types';
 import { Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,7 +37,6 @@ export default function CommunitiesPage() {
 
   useEffect(() => {
     const fetchCommunities = async () => {
-      initializeStorage();
       const currentUser = await getCurrentUser();
       
       if (!currentUser) {

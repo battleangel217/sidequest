@@ -9,8 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoggedInNavbar } from '@/components/logged-in-navbar';
 import { StreakCard } from '@/components/streaks/streak-card';
 import { CommunityCard } from '@/components/community/community-card';
-import { getCurrentUser, initializeStorage } from '@/lib/auth';
-import { mockCommunities, mockUsers } from '@/lib/data';
+import { getCurrentUser } from '@/lib/auth';
 import { AuthUser, Community, User } from '@/lib/types';
 import { Plus, Users as UsersIcon, CheckCircle2 } from 'lucide-react';
 import { TaskCard } from '@/components/tasks/task-card';
@@ -25,7 +24,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const fetchCommunities = async () => {
-      initializeStorage();
       const currentUser = await getCurrentUser();
       
       if (!currentUser) {

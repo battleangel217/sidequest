@@ -63,7 +63,7 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
             <NotificationBell userId={user.id} />
 
             {/* User Menu */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer">
                   {user.avatar && <AvatarImage src={user.avatar} alt={user.username} />}

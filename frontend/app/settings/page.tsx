@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LoggedInNavbar } from '@/components/logged-in-navbar';
-import { getCurrentUser, initializeStorage } from '@/lib/auth';
+import { getCurrentUser } from '@/lib/auth';
 import { User } from '@/lib/types';
 import { Mail, Bell, Shield, LogOut, Moon, Sun, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -25,7 +25,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const initSettings = async () => {
-      initializeStorage();
       const currentUser = await getCurrentUser();
       if (!currentUser) {
         router.push('/auth');
