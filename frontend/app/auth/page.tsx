@@ -101,8 +101,8 @@ export default function AuthPage() {
       await signUp(signUpUsername, signUpEmail, signUpPassword);
 
       toast({
-        title: 'Account Created!',
-        description: 'Please check your email to activate your account before signing in.',
+        title: 'Welcome to SideQuest!',
+        description: 'Account created successfully. Sign in to continue.',
       });
 
       // Reset signup form and switch to signin tab
