@@ -72,10 +72,10 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuContent align="end" className="w-56 sm:w-64">
                 <div className="flex flex-col p-2 gap-2 mb-2">
-                  <p className="font-semibold text-foreground">{user.username}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                  <p className="font-semibold text-foreground truncate">{user.username}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
                 <DropdownMenuSeparator />
                 
