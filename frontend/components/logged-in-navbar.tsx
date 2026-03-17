@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Home, LogOut, Settings, User } from 'lucide-react';
+import { Flame, Home, LogOut, Settings, User, Users } from 'lucide-react';
 import { User as UserType } from '@/lib/types';
 import { signOut } from '@/lib/auth';
 import { StreakBadge } from './streaks/streak-badge';
@@ -24,6 +24,7 @@ interface LoggedInNavbarProps {
 
 export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const maxEXP = 1000;
   const expProgress = (user.exp % maxEXP) / maxEXP * 100;
 
@@ -71,30 +72,49 @@ export function LoggedInNavbar({ user }: LoggedInNavbarProps) {
                   </AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-64">
                 <div className="flex flex-col p-2 gap-2 mb-2">
                   <p className="font-semibold text-foreground">{user.username}</p>
                   <p className="text-xs text-muted-foreground">{user.email}</p>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard" className="cursor-pointer">
-                    <Home className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile" className="cursor-pointer">
-                    <User className="w-4 h-4 mr-2" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/settings" className="cursor-pointer">
-                    <Settings className="w-4 h-4 mr-2" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
+                
+                {pathname !== '/dashboard' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="cursor-pointer">
+                      <Home className="w-4 h-4 mr-2" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+
+                {pathname !== '/communities' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/communities" className="cursor-pointer">
+                      <Users className="w-4 h-4 mr-2" />
+                      Communities
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                
+                {pathname !== '/profile' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                
+                {pathname !== '/settings' && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings" className="cursor-pointer">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
