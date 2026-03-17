@@ -36,94 +36,96 @@ export default function CommunityPage() {
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
 
   useEffect(() => {
-    initializeStorage();
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/auth');
-      return;
-    }
-    
-    setUser(currentUser.data);
+    const initPage = async () => {
+      initializeStorage();
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        router.push('/auth');
+        return;
+      }
+      
+      setUser(currentUser.data);
 
-    const communityInfo = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/${communityId}/`, {
-          method: 'GET',
-          headers: {
-            "Authorization": `Bearer ${currentUser.access}`
-          },
-        });
+      const communityInfo = async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/${communityId}/`, {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${currentUser.access}`
+            },
+          });
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            router.push('/dashboard');
-            return;
-          } else if (response.status === 401) {
-            router.push('/auth');
-            return;
-          } else {
-            throw new Error("Server Error");
+          if (!response.ok) {
+            if (response.status === 404) {
+              router.push('/dashboard');
+              return;
+            } else if (response.status === 401) {
+              router.push('/auth');
+              return;
+            } else {
+              throw new Error("Server Error");
+            }
           }
+
+          const data = await response.json();
+
+          const transformed: Community = {
+            ...data,
+            id: String(data.id),
+            isPrivate: data.is_private,
+            community_exp: data.community_exp || 0,
+            members: data.members
+              ? data.members.map((m: any) => ({
+                  userId: String(m.user.id),
+                  username: m.user.username,
+                  avatar: m.user.avatar,
+                  level: m.user.level,
+                  communityEXP: m.community_exp || 0,
+                  user_rank: m.user_rank || 0,
+                  weeklyEXP: m.weekly_exp || 0,
+                  joinedDate: m.joined_at,
+                }))
+              : [],
+            created: data.created_at,
+          };
+
+          setCommunity(transformed);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          setLoading(false);
         }
-
-        const data = await response.json();
-
-        const transformed: Community = {
-          ...data,
-          id: String(data.id),
-          isPrivate: data.is_private,
-          community_exp: data.community_exp || 0,
-          members: data.members
-            ? data.members.map((m: any) => ({
-                userId: String(m.user.id),
-                username: m.user.username,
-                avatar: m.user.avatar,
-                level: m.user.level,
-                communityEXP: m.community_exp || 0,
-                user_rank: m.user_rank || 0,
-                weeklyEXP: m.weekly_exp || 0,
-                joinedDate: m.joined_at,
-              }))
-            : [],
-          created: data.created_at,
-        };
-
-        setCommunity(transformed);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
-    }
 
-    setUser(currentUser.data);
-    communityInfo();
+      const getTask = async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${communityId}/`, {
+            method: 'GET',
+            headers: {
+              "Authorization": `Bearer ${currentUser.access}`
+            },
+          });
 
-    const getTask = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${communityId}/`, {
-          method: 'GET',
-          headers: {
-            "Authorization": `Bearer ${currentUser.access}`
-          },
-        });
+          if (!response.ok) {
+            throw new Error("Failed to fetch tasks");
+          }
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch tasks");
+          const data = await response.json();
+          setTasks(data);
+        }catch (error) {
+          console.error('Failed to fetch tasks:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to fetch tasks. Please try again later.',
+            variant: 'destructive',
+          });
         }
-
-        const data = await response.json();
-        setTasks(data);
-      }catch (error) {
-        console.error('Failed to fetch tasks:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch tasks. Please try again later.',
-          variant: 'destructive',
-        });
       }
-    }
-    getTask();
+
+      await Promise.all([communityInfo(), getTask()]);
+    };
+    
+    initPage();
   }, [router, communityId]);
 
   // Fetch pending submissions for admin
@@ -132,10 +134,10 @@ export default function CommunityPage() {
     const isAdminCheck = user.id === community.admin_id;
     if (!isAdminCheck) return;
 
-    const currentUser = getCurrentUser();
-    if (!currentUser) return;
-
     const fetchSubmissions = async () => {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) return;
+
       setSubmissionsLoading(true);
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/submissions/${communityId}/`, {

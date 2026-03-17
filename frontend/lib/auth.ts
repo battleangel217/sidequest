@@ -22,7 +22,7 @@ export function getAllUsers(): Record<string, User> {
   return users ? JSON.parse(users) : mockUsers;
 }
 
-export function getCurrentUser(): AuthUser | null {
+export async function getCurrentUser(): Promise<AuthUser | null> {
   if (typeof window === 'undefined') return null;
 
   const auth = localStorage.getItem(STORAGE_KEY);
@@ -30,6 +30,21 @@ export function getCurrentUser(): AuthUser | null {
 
   try {
     const authUser: AuthUser = JSON.parse(auth);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authUser.access}`,
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch user info');
+    }
+
+    const data = await response.json();
+    authUser.data = data;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(authUser));
     return authUser
   } catch {
     return null;

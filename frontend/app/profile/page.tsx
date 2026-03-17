@@ -73,54 +73,59 @@ export default function ProfilePage() {
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
 
   useEffect(() => {
-    initializeStorage();
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/auth');
-      return;
-    }
-    setUser(currentUser.data);
+    const initProfile = async () => {
+      initializeStorage();
+      const currentUser = await getCurrentUser();
+      
+      if (!currentUser) {
+        router.push('/auth');
+        return;
+      }
+      setUser(currentUser.data);
 
-    const getUserInfo = async () => {
-      try{
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentUser.access}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch user info');
+      const getUserInfo = async () => {
+        try{
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentUser.access}`,
+            },
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch user info');
+          }
+
+          const data = await response.json();
+          setUser(data);
+        } catch (error) {
+          console.error('Error fetching user info:', error);
         }
+      };
 
-        const data = await response.json();
-        setUser(data);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
-      }
-    }
-    getUserInfo();
+      const fetchCompletedTasks = async () => {
+        try{
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/completed/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentUser.access}`,
+            },
+          });
 
-    const fetchCompletedTasks = async () => {
-      try{
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/completed/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentUser.access}`,
-          },
-        });
+          const task = await response.json()
+          setCompletedTasks(task);
+        } catch (error) {
+          console.error('Error fetching completed tasks:', error);
+        }
+      };
 
-        const task = await response.json()
-        setCompletedTasks(task);
-      } catch (error) {
-        console.error('Error fetching completed tasks:', error);
-      }
-    }
-    fetchCompletedTasks();
-    setLoading(false);
+      await Promise.all([getUserInfo(), fetchCompletedTasks()]);
+      setLoading(false);
+    };
+
+    initProfile();
   }, [router]);
 
   if (loading || !user) {

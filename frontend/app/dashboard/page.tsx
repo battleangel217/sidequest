@@ -26,7 +26,7 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchCommunities = async () => {
       initializeStorage();
-      const currentUser = getCurrentUser();
+      const currentUser = await getCurrentUser();
       
       if (!currentUser) {
         router.push('/auth');
@@ -74,7 +74,7 @@ export default function DashboardPage() {
     fetchCommunities();
 
     const fetchPendingTasks = async () => {
-      const currentUser = getCurrentUser();
+      const currentUser = await getCurrentUser();
       
       if (!currentUser) {
         router.push('/auth');

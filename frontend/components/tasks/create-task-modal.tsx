@@ -46,7 +46,7 @@ export function CreateTaskModal({
       return;
     }
 
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) {
       toast({ title: 'Error', description: 'You must be logged in to create a task.', variant: 'destructive' });
       router.push('/login');

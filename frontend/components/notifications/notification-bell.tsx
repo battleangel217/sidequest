@@ -27,7 +27,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      const currentUser = getCurrentUser();
+      const currentUser = await getCurrentUser();
 
       if (!currentUser) return;
 
@@ -60,7 +60,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAsRead = async (id: number) => {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) return;
 
     try {
@@ -87,7 +87,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   };
 
   const markAllAsRead = async () => {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) return;
 
     try {
@@ -114,7 +114,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
   };
 
   const handleInviteResponse = async (notificationId: number, action: 'accept' | 'reject') => {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) return;
 
     setRespondingId(notificationId);
