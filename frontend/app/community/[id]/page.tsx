@@ -15,8 +15,19 @@ import { CreateTaskModal } from '@/components/tasks/create-task-modal';
 import { getCurrentUser, initializeStorage } from '@/lib/auth';
 import { mockCommunities, mockTasks, mockCommunityMembers } from '@/lib/data';
 import { User, Community, Task } from '@/lib/types';
-import { Users, Share2, Zap } from 'lucide-react';
+import { Share2, Users, Zap, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function CommunityPage() {
   const router = useRouter();
@@ -90,6 +101,7 @@ export default function CommunityPage() {
           };
 
           setCommunity(transformed);
+          console.log(transformed)
         } catch (error) {
           console.error(error);
         } finally {
@@ -190,12 +202,43 @@ export default function CommunityPage() {
       created_at: new Date().toISOString(),
     };
 
-    setTasks([...tasks, newTask]);
-    setCreateTaskOpen(false);
     toast({
       title: 'Task Created',
       description: 'The new task has been added to the community.',
     });
+  };
+
+  const handleDeleteCommunity = async () => {
+    if (!user || !community) return;
+
+    try {
+      const currentUser = await getCurrentUser();
+      if (!currentUser) return;
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/${community.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${currentUser.access}`,
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: 'Community Deleted',
+          description: 'The community has been successfully deleted.',
+        });
+        router.push('/dashboard');
+      } else {
+        throw new Error('Failed to delete community');
+      }
+    } catch (error) {
+      console.error('Failed to delete community:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete community. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   if (loading || !user || !community) {
@@ -227,11 +270,38 @@ export default function CommunityPage() {
             </div>
             <div className="flex gap-2">
               {isAdmin && (
-                <Button
-                  onClick={() => setCreateTaskOpen(true)}
-                >
-                  Create Task
-                </Button>
+                <>
+                  <Button
+                    onClick={() => setCreateTaskOpen(true)}
+                  >
+                    Create Task
+                  </Button>
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="icon">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Community</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this community? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleDeleteCommunity}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
               )}
               <Button
                 variant="outline"
