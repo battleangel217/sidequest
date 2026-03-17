@@ -24,14 +24,17 @@ export default function SettingsPage() {
   });
 
   useEffect(() => {
-    initializeStorage();
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/auth');
-      return;
+    const initSettings = async () => {
+      initializeStorage();
+      const currentUser = await getCurrentUser();
+      if (!currentUser) {
+        router.push('/auth');
+        return;
+      }
+      setUser(currentUser.data);
+      setLoading(false);
     }
-    setUser(currentUser.data);
-    setLoading(false);
+    initSettings();
   }, [router]);
 
   if (loading || !user) {

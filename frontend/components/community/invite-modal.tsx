@@ -50,7 +50,7 @@ export function InviteModal({
   const handleEmailInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) {
       toast({ title: 'Error', description: 'You must be logged in to send invites.', variant: 'destructive' });
       router.push('/login');

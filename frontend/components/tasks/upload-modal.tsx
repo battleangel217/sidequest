@@ -67,7 +67,7 @@ export function UploadModal({
   const handleSubmit = async () => {
     if (!proofText.trim() && !imageFile && !videoFile) return;
 
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) return;
 
     setSubmitting(true);

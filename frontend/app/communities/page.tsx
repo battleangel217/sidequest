@@ -39,7 +39,7 @@ export default function CommunitiesPage() {
   useEffect(() => {
     const fetchCommunities = async () => {
       initializeStorage();
-      const currentUser = getCurrentUser();
+      const currentUser = await getCurrentUser();
       
       if (!currentUser) {
         router.push('/auth');

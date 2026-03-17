@@ -75,106 +75,59 @@ export default function ProfilePage() {
   const [userCommunityEXP, setUserCommunityEXP] = useState<any[]>([]);
 
   useEffect(() => {
-    initializeStorage();
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/auth');
-      return;
-    }
-    setUser(currentUser.data);
-
-    const getUserInfo = async () => {
-      try{
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentUser.access}`,
-          },
-        });
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch user info');
-        }
-
-        const data = await response.json();
-        setUser(data);
-      } catch (error) {
-        console.error('Error fetching user info:', error);
+    const initProfile = async () => {
+      initializeStorage();
+      const currentUser = await getCurrentUser();
+      
+      if (!currentUser) {
+        router.push('/auth');
+        return;
       }
-    }
-    getUserInfo();
+      setUser(currentUser.data);
 
-    const fetchCompletedTasks = async () => {
-      try{
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/completed/`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${currentUser.access}`,
-          },
-        });
-
-        const task = await response.json()
-        setCompletedTasks(task);
-      } catch (error) {
-        console.error('Error fetching completed tasks:', error);
-      }
-    }
-    fetchCompletedTasks();
-
-    const fetchCommunities = async () => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/communities/`, {
-          headers: {
-            "Authorization": `Bearer ${currentUser.access}`
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          // Filter communities where the user is a member
-          const mappedCommunities: Community[] = data.map((c: any) => ({
-            ...c,
-            id: String(c.id),
-            isPrivate: c.is_private,
-            members: c.members
-              ? c.members.map((m: any) => ({
-                  userId: String(m.user.id),
-                  username: m.user.username,
-                  level: m.user.level,
-                  communityEXP: m.community_exp || 0,
-                  weeklyEXP: m.weekly_exp || 0,
-                  joinedDate: m.joined_at,
-                }))
-              : [],
-            created: c.created_at,
-          }));
-
-          const memberCommunities = mappedCommunities.filter(c => 
-            c.members.some(m => m.userId === String(currentUser.data.id))
-          );
+      const getUserInfo = async () => {
+        try{
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/me`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentUser.access}`,
+            },
+          });
           
-          setUserCommunities(memberCommunities);
+          if (!response.ok) {
+            throw new Error('Failed to fetch user info');
+          }
 
-          // Calculate EXP per community for the breakdown
-          const expData = memberCommunities.map(community => {
-            const memberData = community.members.find(m => m.userId === String(currentUser.data.id));
-            return {
-              name: community.name,
-              exp: memberData ? memberData.communityEXP : 0,
-            };
-          }).sort((a, b) => b.exp - a.exp); // Sort by highest EXP
-
-          setUserCommunityEXP(expData);
+          const data = await response.json();
+          setUser(data);
+        } catch (error) {
+          console.error('Error fetching user info:', error);
         }
-      } catch (error) {
-        console.error('Failed to fetch communities:', error);
-      }
+      };
+
+      const fetchCompletedTasks = async () => {
+        try{
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/tasks/completed/`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${currentUser.access}`,
+            },
+          });
+
+          const task = await response.json()
+          setCompletedTasks(task);
+        } catch (error) {
+          console.error('Error fetching completed tasks:', error);
+        }
+      };
+
+      await Promise.all([getUserInfo(), fetchCompletedTasks()]);
+      setLoading(false);
     };
 
-    fetchCommunities();
-    setLoading(false);
+    initProfile();
   }, [router]);
 
   if (loading || !user) {

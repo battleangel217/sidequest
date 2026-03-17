@@ -43,7 +43,7 @@ export function ReviewSubmissionsTab({
   const [reviewingId, setReviewingId] = useState<number | null>(null);
 
   const handleReview = async (submissionId: number, newStatus: 'approved' | 'rejected') => {
-    const currentUser = getCurrentUser();
+    const currentUser = await getCurrentUser();
     if (!currentUser) return;
 
     setReviewingId(submissionId);
