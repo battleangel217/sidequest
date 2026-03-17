@@ -3,6 +3,7 @@ from rest_framework import serializers
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from djoser.conf import settings as djoser_settings
 
 User = get_user_model()
 
@@ -23,6 +24,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
         user = CustomUserModel(
             email=email,
             username=username,
+            is_active=not djoser_settings.SEND_ACTIVATION_EMAIL
         )
         user.set_password(validate_data['password'])
         user.save()

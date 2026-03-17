@@ -33,14 +33,30 @@ class GoogleSignupViews(APIView):
                 return Response({"error": "Token verification failed", "details": str(e)}, status=400)
 
             email = id_info['email']
-            firstname = id_info.get('given_name', '')
+            firstname = id_info.get('given_name', 'user')
             lastname = id_info.get('family_name', '')
 
-            user, created = User.objects.get_or_create(email=email)
+            # Generate unique username for new users
+            username_base = f"{firstname.lower()}{lastname.lower()}"
+            # Remove non-alphanumeric characters
+            username_clean = "".join(c for c in username_base if c.isalnum()) 
+            new_username = f"{username_clean}{str(uuid.uuid4())[:8]}"
+
+            user, created = User.objects.get_or_create(
+                email=email,
+                defaults={
+                    'username': new_username,
+                    'is_active': True 
+                }
+            )
+
             if created:
                 user.set_unusable_password()
-                user.username = f"{firstname.lower()}{lastname.lower()}{str(uuid.uuid4())[:4]}"
-                user.email = email
+                user.save()
+            elif not user.is_active:
+                # If user existed but was inactive (e.g. pending email verification),
+                # verifying via Google should activate them.
+                user.is_active = True
                 user.save()
 
             serializer = CustomUserSerializer(user)

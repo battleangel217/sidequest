@@ -168,13 +168,27 @@ AUTH_USER_MODEL = 'users.CustomUserModel'
 DJOSER = {
     "LOGIN_FIELD": "email",
     "USER_ID_FIELD": "email",
-    "USER_CREATE_PASSWORD_RETYPE": False,  # 👈 turn this off
+    "USER_CREATE_PASSWORD_RETYPE": False,
     "SERIALIZERS": {
         "user_create": "users.serializers.CustomUserCreateSerializer",
         "user": "users.serializers.CustomUserSerializer",
         "current_user": "users.serializers.CustomUserSerializer",
     },
+    "SEND_ACTIVATION_EMAIL": True,
+    "ACTIVATION_URL": "activate/{uid}/{token}",
+    "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
 }
+
+# Email settings
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@sidequest.com")
+DOMAIN = os.environ.get("NEXT_PUBLIC_APP_URL", "localhost:3000")
+SITE_NAME = "SideQuest"
 
 GOOGLE_OAUTH_CLIENT_SECRET = os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
 GOOGLE_OAUTH_CLIENT_ID = os.getenv("GOOGLE_OAUTH_CLIENT_ID")

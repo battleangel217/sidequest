@@ -138,3 +138,16 @@ export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false;
   return !!localStorage.getItem(STORAGE_KEY);
 }
+
+// Activate user account
+export async function activateUser(uid: string, token: string) {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/users/activation/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid, token })
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to activate account');
+  }
+}

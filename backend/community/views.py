@@ -53,3 +53,19 @@ class CommunityDetailsViews(APIView):
 
         community.delete()
         return Response({"message": "Community deleted successfully"}, status=status.HTTP_200_OK)
+
+class JoinCommunityView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request, community_id):
+        community = get_object_or_404(CommunityModel, id=community_id)
+        
+        if MembershipModel.objects.filter(user=request.user, community=community).exists():
+            return Response({"message": "User is already a member"}, status=status.HTTP_200_OK)
+            
+        MembershipModel.objects.create(
+            user=request.user,
+            community=community,
+            role="member"
+        )
+        return Response({"message": "Joined community successfully"}, status=status.HTTP_201_CREATED)
