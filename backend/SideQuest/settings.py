@@ -177,6 +177,10 @@ DJOSER = {
     "SEND_ACTIVATION_EMAIL": True,
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "PASSWORD_RESET_CONFIRM_URL": "password/reset/confirm/{uid}/{token}",
+    "EMAIL": {                                          # 👈 add this
+        "activation": "users.email.CustomActivationEmail",
+        "password_reset": "users.email.CustomPasswordResetEmail",
+    },
 }
 
 # Email settings
